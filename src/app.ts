@@ -6,7 +6,7 @@ import pinoHttp from "pino-http";
 import { healthRouter } from "./api/routes/health.routes";
 import { errorHandler } from "./api/middlewares/errorHandler";
 import { reportsRouter } from "./api/routes/reports.routes";
-
+import chatbotRouter from "./api/routes/chatbot.routes";
 
 export function createApp() {
   const app = express();
@@ -17,7 +17,8 @@ export function createApp() {
   app.use(pinoHttp());
 
   app.use("/health", healthRouter);
-app.use("/api/events", reportsRouter);
+  app.use("/api/events", reportsRouter);
+  app.use("/api/chatbot", chatbotRouter);
 
   app.use(errorHandler);
 
