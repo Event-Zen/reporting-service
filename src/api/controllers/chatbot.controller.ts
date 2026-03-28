@@ -1,6 +1,14 @@
 import { Request, Response } from "express";
 import { ChatbotHistory } from "../models/chatbot.model";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { v4 as uuidv4 } from "uuid";
+
+const geminiApiKey = process.env.GEMINI_API_KEY;
+if (!geminiApiKey) {
+  throw new Error("GEMINI_API_KEY is required for chatbot Gemini integration.");
+}
+
+const genAI = new GoogleGenerativeAI(geminiApiKey);
 
 export const sendMessage = async (req: Request, res: Response) => {
   try {
@@ -15,30 +23,23 @@ export const sendMessage = async (req: Request, res: Response) => {
     if (!chatSession) {
       currentChatId = uuidv4();
       const title = message.length > 30 ? message.substring(0, 30) + "..." : message;
-      chatSession = new ChatbotHistory({
-        chatId: currentChatId,
-        userId,
-        title,
-        messages: [],
-      });
+      chatSession = new ChatbotHistory({ chatId: currentChatId, userId, title, messages: [] });
     }
 
-    // Save User Message
-    chatSession.messages.push({
-      sender: "user",
-      text: message,
-      timestamp: new Date(),
-    });
+    chatSession.messages.push({ sender: "user", text: message, timestamp: new Date() });
 
-    // Placeholder Bot Response (Before Gemini)
-    const botResponseText = "This is a placeholder response. Gemini is not connected yet.";
+    const formattedHistory = chatSession.messages.slice(0, -1).map((msg) => ({
+      role: msg.sender === "bot" ? "model" : "user",
+      parts: [{ text: msg.text }],
+    }));
 
-    chatSession.messages.push({
-      sender: "bot",
-      text: botResponseText,
-      timestamp: new Date(),
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const chat = model.startChat({ history: formattedHistory });
     
+    const result = await chat.sendMessage(message);
+    const botResponseText = result.response.text();
+
+    chatSession.messages.push({ sender: "bot", text: botResponseText, timestamp: new Date() });
     await chatSession.save();
 
     res.status(200).json({
