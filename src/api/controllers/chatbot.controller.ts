@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { ChatbotHistory } from "../models/chatbot.model";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { v4 as uuidv4 } from "uuid";
+import fs from "fs";
+import path from "path";
 
 const geminiApiKey = process.env.GEMINI_API_KEY;
 if (!geminiApiKey) {
@@ -10,39 +12,8 @@ if (!geminiApiKey) {
 
 const genAI = new GoogleGenerativeAI(geminiApiKey);
 
-const previousEventsData = [
-  {
-    "eventId": "EVT-001",
-    "eventName": "Tech Innovators Summit 2025",
-    "eventType": "Corporate Conference",
-    "location": "San Jose Convention Center",
-    "attendees": 1500,
-    "totalBudget": 45000,
-    "servicesProvided": ["Venue Booking", "Catering", "Live Streaming", "AI Matching"],
-    "successRating": 4.8
-  },
-  {
-    "eventId": "EVT-002",
-    "eventName": "Summer Nights Music Festival",
-    "eventType": "Outdoor Concert",
-    "location": "Central Park Amphitheater",
-    "attendees": 5000,
-    "totalBudget": 120000,
-    "servicesProvided": ["Stage Setup", "Security", "Ticketing", "Vendor Management"],
-    "successRating": 4.9
-  },
-  {
-    "eventId": "EVT-003",
-    "eventName": "Startup Pitch Night",
-    "eventType": "Networking Event",
-    "location": "Downtown Innovation Hub",
-    "attendees": 200,
-    "totalBudget": 5000,
-    "servicesProvided": ["Venue Booking", "Basic Audio/Visual", "Beverages"],
-    "successRating": 4.5
-  }
-];
-
+const dataFilePath = path.join(__dirname, "../data/data.json");
+const previousEventsData = JSON.parse(fs.readFileSync(dataFilePath, "utf-8"));
 
 export const sendMessage = async (req: Request, res: Response) => {
   try {
@@ -96,15 +67,15 @@ export const sendMessage = async (req: Request, res: Response) => {
       - Always maintain a polite, helpful, and professional tone.
     `;
 
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash", 
-      systemInstruction: systemPrompt 
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      systemInstruction: systemPrompt,
     });
 
     const chat = model.startChat({
       history: formattedHistory,
     });
-    
+
     const result = await chat.sendMessage(message);
     const botResponseText = result.response.text();
 
