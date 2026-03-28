@@ -1,0 +1,152 @@
+[
+  {
+    "eventId": "EVT-001",
+    "eventName": "Tech Innovators Summit 2025",
+    "eventType": "Corporate Conference",
+    "location": "San Jose Convention Center",
+    "attendees": 1500,
+    "totalBudget": 45000,
+    "servicesProvided": ["Venue Booking", "Catering", "Live Streaming", "AI Matching"],
+    "successRating": 4.8
+  },
+  {
+    "eventId": "EVT-002",
+    "eventName": "Summer Nights Music Festival",
+    "eventType": "Outdoor Concert",
+    "location": "Central Park Amphitheater",
+    "attendees": 5000,
+    "totalBudget": 120000,
+    "servicesProvided": ["Stage Setup", "Security", "Ticketing", "Vendor Management"],
+    "successRating": 4.9
+  },
+  {
+    "eventId": "EVT-003",
+    "eventName": "Startup Pitch Night",
+    "eventType": "Networking Event",
+    "location": "Downtown Innovation Hub",
+    "attendees": 200,
+    "totalBudget": 5000,
+    "servicesProvided": ["Venue Booking", "Basic Audio/Visual", "Beverages"],
+    "successRating": 4.5
+  },
+  {
+    "eventId": "EVT-004",
+    "eventName": "Global Marketing Expo",
+    "eventType": "Trade Show",
+    "location": "Las Expo Center",
+    "attendees": 8000,
+    "totalBudget": 250000,
+    "servicesProvided": ["Booth Setup", "Ticketing", "Marketing", "Wi-Fi Infrastructure"],
+    "successRating": 4.7
+  },
+  {
+    "eventId": "EVT-005",
+    "eventName": "Cloud Computing Webinar",
+    "eventType": "Virtual Event",
+    "location": "Online",
+    "attendees": 3000,
+    "totalBudget": 8000,
+    "servicesProvided": ["Virtual Platform Hosting", "Moderation", "Recording"],
+    "successRating": 4.6
+  },
+  {
+    "eventId": "EVT-006",
+    "eventName": "Annual Charity Gala",
+    "eventType": "Fundraiser",
+    "location": "Grand Plaza Hotel",
+    "attendees": 400,
+    "totalBudget": 35000,
+    "servicesProvided": ["Venue Booking", "Catering", "Silent Auction Software", "Decor"],
+    "successRating": 4.9
+  },
+  {
+    "eventId": "EVT-007",
+    "eventName": "Creative Writers Retreat",
+    "eventType": "Workshop",
+    "location": "Mountain View Lodge",
+    "attendees": 50,
+    "totalBudget": 12000,
+    "servicesProvided": ["Accommodation", "Catering", "Stationery", "Guest Speakers"],
+    "successRating": 4.8
+  },
+  {
+    "eventId": "EVT-008",
+    "eventName": "Esports Championship Finals",
+    "eventType": "Gaming Tournament",
+    "location": "City Arena",
+    "attendees": 12000,
+    "totalBudget": 500000,
+    "servicesProvided": ["Network Infrastructure", "Stage Setup", "Live Streaming", "Security"],
+    "successRating": 4.9
+  },
+  {
+    "eventId": "EVT-009",
+    "eventName": "Healthcare Professionals Symposium",
+    "eventType": "Medical Conference",
+    "location": "National Convention Center",
+    "attendees": 2500,
+    "totalBudget": 85000,
+    "servicesProvided": ["Ticketing", "Catering", "Translators", "Digital Signage"],
+    "successRating": 4.7
+  },
+  {
+    "eventId": "EVT-010",
+    "eventName": "Local Food & Wine Tasting",
+    "eventType": "Festival",
+    "location": "Riverside Park",
+    "attendees": 1200,
+    "totalBudget": 20000,
+    "servicesProvided": ["Permit Acquisition", "Tent Setup", "Waste Management", "Security"],
+    "successRating": 4.5
+  },
+  {
+    "eventId": "EVT-011",
+    "eventName": "Cybersecurity Masterclass",
+    "eventType": "Workshop",
+    "location": "Tech Hub Building 4",
+    "attendees": 150,
+    "totalBudget": 9000,
+    "servicesProvided": ["Venue Booking", "Audio/Visual", "Catering"],
+    "successRating": 4.6
+  },
+  {
+    "eventId": "EVT-012",
+    "eventName": "Winter Wonderland Wedding",
+    "eventType": "Private Event",
+    "location": "Crystal Lake Manor",
+    "attendees": 250,
+    "totalBudget": 60000,
+    "servicesProvided": ["Decor", "Photography", "Catering", "Live Band"],
+    "successRating": 5.0
+  },
+  {
+    "eventId": "EVT-013",
+    "eventName": "University Career Fair",
+    "eventType": "Exhibition",
+    "location": "University Main Hall",
+    "attendees": 4000,
+    "totalBudget": 15000,
+    "servicesProvided": ["Booth Setup", "Marketing", "Volunteer Management"],
+    "successRating": 4.4
+  },
+  {
+    "eventId": "EVT-014",
+    "eventName": "AI & Robotics Summit",
+    "eventType": "Tech Conference",
+    "location": "Metropolitan Expo Center",
+    "attendees": 3500,
+    "totalBudget": 150000,
+    "servicesProvided": ["Live Streaming", "Ticketing", "Security", "Catering"],
+    "successRating": 4.8
+  },
+  {
+    "eventId": "EVT-015",
+    "eventName": "Yoga & Wellness Retreat",
+    "eventType": "Wellness Event",
+    "location": "Sunny Coast Resort",
+    "attendees": 80,
+    "totalBudget": 18000,
+    "servicesProvided": ["Accommodation", "Healthy Catering", "Instructors", "Equipment Rental"],
+    "successRating": 4.9
+  }
+]
