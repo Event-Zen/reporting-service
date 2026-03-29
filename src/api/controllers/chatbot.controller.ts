@@ -2,8 +2,7 @@ import { Request, Response } from "express";
 import { ChatbotHistory } from "../models/chatbot.model";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { v4 as uuidv4 } from "uuid";
-import fs from "fs";
-import path from "path";
+import mongoose from "mongoose";
 
 const geminiApiKey = process.env.GEMINI_API_KEY;
 if (!geminiApiKey) {
@@ -12,8 +11,38 @@ if (!geminiApiKey) {
 
 const genAI = new GoogleGenerativeAI(geminiApiKey);
 
-const dataFilePath = path.join(__dirname, "../data/data.json");
-const previousEventsData = JSON.parse(fs.readFileSync(dataFilePath, "utf-8"));
+const DEFAULT_EVENT_DATABASE = process.env.EVENTS_DATABASE_NAME?.trim();
+const DEFAULT_EVENT_COLLECTION = process.env.EVENTS_COLLECTION_NAME || "events";
+const DEFAULT_EVENT_LIMIT = Number(process.env.CHATBOT_EVENT_DATA_LIMIT || 50);
+
+function getEventDataLimit() {
+  if (Number.isFinite(DEFAULT_EVENT_LIMIT) && DEFAULT_EVENT_LIMIT > 0) {
+    return Math.min(DEFAULT_EVENT_LIMIT, 200);
+  }
+  return 50;
+}
+
+async function getLatestEventData() {
+  const connection = mongoose.connection;
+  if (!connection.db) {
+    throw new Error("MongoDB connection is not ready.");
+  }
+
+  const db = DEFAULT_EVENT_DATABASE
+    ? connection.getClient().db(DEFAULT_EVENT_DATABASE)
+    : connection.db;
+
+  const limit = getEventDataLimit();
+  const collection = db.collection(DEFAULT_EVENT_COLLECTION);
+
+  const docs = await collection
+    .find({})
+    .sort({ updatedAt: -1, createdAt: -1, _id: -1 })
+    .limit(limit)
+    .toArray();
+
+  return docs;
+}
 
 export const sendMessage = async (req: Request, res: Response) => {
   try {
@@ -51,13 +80,14 @@ export const sendMessage = async (req: Request, res: Response) => {
       parts: [{ text: msg.text }],
     }));
 
-    const eventDataString = JSON.stringify(previousEventsData, null, 2);
+    const latestEventData = await getLatestEventData();
+    const eventDataString = JSON.stringify(latestEventData, null, 2);
 
     const systemPrompt = `
       You are an AI assistant for EventZen, a premium event planning platform. 
       Your primary role is to help users plan events, manage budgets, and answer questions based on our previous event data.
 
-      Here is the data of our previous successful events for your reference:
+      Here is the latest event data from our MongoDB database for your reference:
       ${eventDataString}
 
       STRICT INSTRUCTIONS AND BOUNDARIES:
