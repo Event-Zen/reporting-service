@@ -115,7 +115,7 @@ export const sendMessage = async (req: Request, res: Response) => {
     `;
 
     // 4. Call Gemini with Fallback
-    const modelNames = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"];
+    const modelNames = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"];
     let botResponseText = "";
     let lastError = null;
 
