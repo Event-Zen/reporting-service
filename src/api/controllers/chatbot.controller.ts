@@ -53,6 +53,13 @@ async function getLatestEventData() {
 export const sendMessage = async (req: Request, res: Response) => {
   try {
     const { userId, chatId, message } = req.body;
+    
+    // 1. Initial health check for DB
+    if (mongoose.connection.readyState !== 1) {
+      console.error("Database not connected in sendMessage");
+      return res.status(503).json({ error: "Service temporarily unavailable: Database connection lost." });
+    }
+
     let currentChatId = chatId;
     let chatSession = null;
 
@@ -75,12 +82,16 @@ export const sendMessage = async (req: Request, res: Response) => {
       });
     }
 
+    // 2. Save User Message FIRST
     chatSession.messages.push({
       sender: "user",
       text: message,
       timestamp: new Date(),
     });
+    
+    await chatSession.save();
 
+    // 3. Prepare AI Prompt
     const formattedHistory = chatSession.messages.slice(0, -1).map((msg) => ({
       role: msg.sender === "bot" ? "model" : "user",
       parts: [{ text: msg.text }],
@@ -98,13 +109,12 @@ export const sendMessage = async (req: Request, res: Response) => {
       Here is the latest event data from our platform for your reference:
       ${eventDataString}
 
-      STRICT INSTRUCTIONS AND BOUNDARIES:
-      - You MUST ONLY answer questions related to event planning, the EventZen platform, event services, budgeting, or the previous events data provided above.
-      - If a user asks a question completely unrelated to events or EventZen (for example: coding help, general history, weather, politics, or math), you MUST decline to answer.
-      - When declining an unrelated request, use this exact fallback message: "I'm sorry, but I am an event planning assistant for EventZen. I can only help you with questions related to organizing events, our platform services, or our past event portfolios. How can I help you plan your next event?"
-      - Always maintain a polite, helpful, and professional tone.
+      STRICT INSTRUCTIONS:
+      - Answer ONLY event planning, EventZen, or budget related questions.
+      - Decline unrelated queries with: "I'm sorry, but I am an event planning assistant for EventZen. I can only help you with questions related to organizing events, our platform services, or our past event portfolios. How can I help you plan your next event?"
     `;
 
+    // 4. Call Gemini
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       systemInstruction: systemPrompt,
@@ -117,13 +127,13 @@ export const sendMessage = async (req: Request, res: Response) => {
     const result = await chat.sendMessage(message);
     const botResponseText = result.response.text();
 
+    // 5. Save Bot Response
     chatSession.messages.push({
       sender: "bot",
       text: botResponseText,
       timestamp: new Date(),
     });
     
-    // Final save after AI successfully responds
     await chatSession.save();
 
     res.status(200).json({
@@ -135,11 +145,14 @@ export const sendMessage = async (req: Request, res: Response) => {
     console.error("DETAILED CHATBOT ERROR:", {
       message: error.message,
       stack: error.stack,
-      details: error.response?.data || "No response data"
+      code: error.code || "No error code"
     });
+    
     res.status(500).json({ 
       error: "Failed to process message.",
-      details: process.env.NODE_ENV === "development" ? error.message : undefined 
+      message: error.message,
+      code: error.code,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined
     });
   }
 };
