@@ -34,11 +34,12 @@ async function getLatestEventData() {
       ? connection.getClient().db(DEFAULT_EVENT_DATABASE)
       : connection.db;
 
-    const limit = getEventDataLimit();
+    const limit = Math.min(getEventDataLimit(), 5);
     const collection = db.collection(DEFAULT_EVENT_COLLECTION);
 
     const docs = await collection
       .find({})
+      .project({ title: 1, description: 1, type: 1, location: 1, status: 1, budget: 1, _id: 0 })
       .sort({ updatedAt: -1, createdAt: -1, _id: -1 })
       .limit(limit)
       .toArray();
@@ -92,7 +93,12 @@ export const sendMessage = async (req: Request, res: Response) => {
     await chatSession.save();
 
     // 3. Prepare AI Prompt
-    const formattedHistory = chatSession.messages.slice(0, -1).map((msg) => ({
+    const maxHistoryLength = 10;
+    const historySlice = chatSession.messages.length > maxHistoryLength + 1 
+      ? chatSession.messages.slice(-(maxHistoryLength + 1), -1) 
+      : chatSession.messages.slice(0, -1);
+
+    const formattedHistory = historySlice.map((msg: any) => ({
       role: msg.sender === "bot" ? "model" : "user",
       parts: [{ text: msg.text }],
     }));
