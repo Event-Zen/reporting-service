@@ -23,25 +23,31 @@ function getEventDataLimit() {
 }
 
 async function getLatestEventData() {
-  const connection = mongoose.connection;
-  if (!connection.db) {
-    throw new Error("MongoDB connection is not ready.");
+  try {
+    const connection = mongoose.connection;
+    if (!connection.db) {
+      console.warn("MongoDB connection is not ready. Skipping event data fetching.");
+      return [];
+    }
+
+    const db = DEFAULT_EVENT_DATABASE
+      ? connection.getClient().db(DEFAULT_EVENT_DATABASE)
+      : connection.db;
+
+    const limit = getEventDataLimit();
+    const collection = db.collection(DEFAULT_EVENT_COLLECTION);
+
+    const docs = await collection
+      .find({})
+      .sort({ updatedAt: -1, createdAt: -1, _id: -1 })
+      .limit(limit)
+      .toArray();
+
+    return docs;
+  } catch (error) {
+    console.error("Failed to fetch latest event data (likely due to cross-database permissions):", error);
+    return []; // Return empty array if fetching fails so the chatbot can still work
   }
-
-  const db = DEFAULT_EVENT_DATABASE
-    ? connection.getClient().db(DEFAULT_EVENT_DATABASE)
-    : connection.db;
-
-  const limit = getEventDataLimit();
-  const collection = db.collection(DEFAULT_EVENT_COLLECTION);
-
-  const docs = await collection
-    .find({})
-    .sort({ updatedAt: -1, createdAt: -1, _id: -1 })
-    .limit(limit)
-    .toArray();
-
-  return docs;
 }
 
 export const sendMessage = async (req: Request, res: Response) => {
@@ -81,13 +87,15 @@ export const sendMessage = async (req: Request, res: Response) => {
     }));
 
     const latestEventData = await getLatestEventData();
-    const eventDataString = JSON.stringify(latestEventData, null, 2);
+    const eventDataString = latestEventData.length > 0 
+      ? JSON.stringify(latestEventData, null, 2)
+      : "No previous event data available at the moment.";
 
     const systemPrompt = `
       You are an AI assistant for EventZen, a premium event planning platform. 
       Your primary role is to help users plan events, manage budgets, and answer questions based on our previous event data.
 
-      Here is the latest event data from our MongoDB database for your reference:
+      Here is the latest event data from our platform for your reference:
       ${eventDataString}
 
       STRICT INSTRUCTIONS AND BOUNDARIES:
@@ -98,7 +106,7 @@ export const sendMessage = async (req: Request, res: Response) => {
     `;
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       systemInstruction: systemPrompt,
     });
 
@@ -114,6 +122,8 @@ export const sendMessage = async (req: Request, res: Response) => {
       text: botResponseText,
       timestamp: new Date(),
     });
+    
+    // Final save after AI successfully responds
     await chatSession.save();
 
     res.status(200).json({
@@ -121,15 +131,25 @@ export const sendMessage = async (req: Request, res: Response) => {
       title: chatSession.title,
       messages: chatSession.messages,
     });
-  } catch (error) {
-    console.error("Error in chatbot controller:", error);
-    res.status(500).json({ error: "Failed to process message." });
+  } catch (error: any) {
+    console.error("DETAILED CHATBOT ERROR:", {
+      message: error.message,
+      stack: error.stack,
+      details: error.response?.data || "No response data"
+    });
+    res.status(500).json({ 
+      error: "Failed to process message.",
+      details: process.env.NODE_ENV === "development" ? error.message : undefined 
+    });
   }
 };
 
 export const getUserChats = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ error: "UserId is required." });
+    }
     const chats = await ChatbotHistory.find({ userId })
       .sort({ updatedAt: -1 })
       .select("chatId title updatedAt");
