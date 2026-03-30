@@ -114,18 +114,40 @@ export const sendMessage = async (req: Request, res: Response) => {
       - Decline unrelated queries with: "I'm sorry, but I am an event planning assistant for EventZen. I can only help you with questions related to organizing events, our platform services, or our past event portfolios. How can I help you plan your next event?"
     `;
 
-    // 4. Call Gemini
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      systemInstruction: systemPrompt,
-    });
+    // 4. Call Gemini with Fallback
+    const modelNames = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"];
+    let botResponseText = "";
+    let lastError = null;
 
-    const chat = model.startChat({
-      history: formattedHistory,
-    });
+    for (const modelName of modelNames) {
+      try {
+        console.log(`Attempting to use Gemini model: ${modelName}`);
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: systemPrompt,
+        });
 
-    const result = await chat.sendMessage(message);
-    const botResponseText = result.response.text();
+        const chat = model.startChat({
+          history: formattedHistory,
+        });
+
+        const result = await chat.sendMessage(message);
+        botResponseText = result.response.text();
+        
+        if (botResponseText) {
+          console.log(`Successfully used model: ${modelName}`);
+          break; 
+        }
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Model ${modelName} failed choice:`, err.message);
+        continue;
+      }
+    }
+
+    if (!botResponseText && lastError) {
+      throw lastError; 
+    }
 
     // 5. Save Bot Response
     chatSession.messages.push({
